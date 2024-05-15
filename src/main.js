@@ -39,21 +39,41 @@ function displayChords() {
     const chordsContainer = document.getElementById('chords-container');
     chordsContainer.innerHTML = '';
     const chords = scales[scale].getChords(key);
+
+    const threeFingerChords = chords.filter(chordObj => chordObj.triad.tab.filter(fret => fret !== 'x').length === 3);
+    const fourFingerChords = chords.filter(chordObj => chordObj.triad.tab.filter(fret => fret !== 'x').length === 4);
+    const fiveFingerChords = chords.filter(chordObj => chordObj.triad.tab.filter(fret => fret !== 'x').length === 5);
+
+    addChordsToContainer(chordsContainer, threeFingerChords, '3-Finger Chords');
+    addChordsToContainer(chordsContainer, fourFingerChords, '4-Finger Chords');
+    addChordsToContainer(chordsContainer, fiveFingerChords, '5-Finger Chords');
+}
+
+function addChordsToContainer(container, chords, title) {
+    const groupElement = document.createElement('div');
+    groupElement.className = 'chord-group';
+
+    const titleElement = document.createElement('h3');
+    titleElement.textContent = title;
+    groupElement.appendChild(titleElement);
+
     chords.forEach(chordObj => {
         const triadElement = createChordElement(chordObj.triad);
         triadElement.onclick = async () => {
             await startAudioContext();
             playChordOrArpeggio(chordObj.triad);
         };
-        chordsContainer.appendChild(triadElement);
+        groupElement.appendChild(triadElement);
 
         const seventhElement = createChordElement(chordObj.seventh);
         seventhElement.onclick = async () => {
             await startAudioContext();
             playChordOrArpeggio(chordObj.seventh);
         };
-        chordsContainer.appendChild(seventhElement);
+        groupElement.appendChild(seventhElement);
     });
+
+    container.appendChild(groupElement);
 }
 
 function createChordElement(chord) {
@@ -86,7 +106,7 @@ function playChordOrArpeggio(chord) {
     const playMode = document.querySelector('input[name="playMode"]:checked').value;
     const synth = new Tone.PolySynth(Tone.Synth).toDestination();
     const now = Tone.now();
-    const chordNotes = chord.getNotes();
+    const chordNotes = chord.getNotes().map(note => `${note}4`);
     if (playMode === 'chord') {
         synth.triggerAttackRelease(chordNotes, "8n", now);
     } else {

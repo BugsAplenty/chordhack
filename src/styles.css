@@ -1,53 +1,46 @@
 body {
     font-family: Arial, sans-serif;
-    padding: 20px;
     text-align: center;
 }
 
 h1 {
-    text-align: center;
-}
-
-.controls {
-    display: flex;
-    justify-content: center;
     margin-bottom: 20px;
 }
 
-.dropdown label {
+label {
     margin-right: 10px;
 }
 
 select {
-    margin-right: 20px;
+    margin-bottom: 20px;
 }
 
-.options {
-    display: flex;
-    align-items: center;
-}
-
-.options button {
-    margin-right: 20px;
+button {
+    margin-top: 20px;
 }
 
 #chords-container {
     display: flex;
+    justify-content: space-around;
     flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
+    margin-top: 20px;
+}
+
+.chord-group {
+    margin: 20px 0;
 }
 
 .chord {
+    background-color: #f0f0f0;
     border: 1px solid #ccc;
+    border-radius: 8px;
+    margin: 10px;
     padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-    cursor: pointer;
     width: 100px;
+    text-align: center;
 }
 
-.chord .tab {
-    font-family: monospace;
+.tab {
     margin-top: 10px;
+    font-family: monospace;
 }

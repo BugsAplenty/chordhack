@@ -1,0 +1,17 @@
+export const chordPatterns = {
+    maj: { name: 'maj', intervals: [0, 4, 7], tab: ['x', '3', '2', '0', '1', '0'] },
+    min: { name: 'min', intervals: [0, 3, 7], tab: ['x', '0', '2', '2', '1', '0'] },
+    dim: { name: 'dim', intervals: [0, 3, 6], tab: ['x', '2', '3', '4', '3', 'x'] },
+    aug: { name: 'aug', intervals: [0, 4, 8], tab: ['x', '3', '2', '1', '1', '1'] },
+    maj7: { name: 'maj7', intervals: [0, 4, 7, 11], tab: ['x', '3', '2', '0', '0', '0'] },
+    m7: { name: 'm7', intervals: [0, 3, 7, 10], tab: ['x', '0', '2', '2', '1', '0'] },
+    m7b5: { name: 'm7b5', intervals: [0, 3, 6, 10], tab: ['x', '2', '3', '2', '3', 'x'] },
+    dim7: { name: 'dim7', intervals: [0, 3, 6, 9], tab: ['x', '2', '3', '2', '3', 'x'] },
+    dominant7: { name: '7', intervals: [0, 4, 7, 10], tab: ['x', '3', '2', '0', '0', '0'] },
+    mMaj7: { name: 'mMaj7', intervals: [0, 3, 7, 11], tab: ['x', '0', '2', '2', '1', '0'] },
+    augMaj7: { name: 'augMaj7', intervals: [0, 4, 8, 11], tab: ['x', '3', '2', '1', '1', '1'] },
+    sus2: { name: 'sus2', intervals: [0, 2, 7], tab: ['x', '3', '2', '0', '1', '0'] },
+    sus4: { name: 'sus4', intervals: [0, 5, 7], tab: ['x', '3', '2', '0', '1', '0'] },
+    add9: { name: 'add9', intervals: [0, 4, 7, 14], tab: ['x', '3', '2', '0', '1', '0'] },
+    add11: { name: 'add11', intervals: [0, 4, 7, 17], tab: ['x', '3', '2', '0', '1', '0'] },
+};

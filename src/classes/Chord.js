@@ -17,14 +17,20 @@ export class Chord {
             'A': 9, 'A#': 10, 'Bb': 10,
             'B': 11
         };
-        
-        const stringTunings = ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'];
 
-        const rootNote = noteMap[this.root];
-        return this.tab.map((fret, stringIndex) => {
-            if (fret === 'x') return null;
-            const stringNote = Tone.Frequency(stringTunings[stringIndex]).transpose(fret).toNote();
-            return stringNote;
-        }).filter(note => note !== null);
+        const reverseNoteMap = Object.entries(noteMap).reduce((acc, [note, midi]) => {
+            acc[midi] = note;
+            return acc;
+        }, {});
+
+        const rootMidi = noteMap[this.root];
+        const intervals = this.type.intervals;
+
+        const chordNotes = intervals.map(interval => {
+            const noteMidi = (rootMidi + interval) % 12;
+            return reverseNoteMap[noteMidi];
+        });
+
+        return chordNotes;
     }
 }
