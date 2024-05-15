@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guitar Chords Tool</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <h1>Guitar Chords Tool</h1>
+    <div>
+        <label for="scale">Scale:</label>
+        <select id="scale" onchange="updateKeys()">
+            <option value="major">Major</option>
+            <option value="minor">Minor</option>
+            <option value="harmonicMinor">Harmonic Minor</option>
+            <option value="melodicMinor">Melodic Minor</option>
+            <option value="majorPentatonic">Major Pentatonic</option>
+            <option value="minorPentatonic">Minor Pentatonic</option>
+            <option value="blues">Blues</option>
+            <option value="lydian">Lydian</option>
+            <option value="mixolydian">Mixolydian</option>
+            <option value="dorian">Dorian</option>
+            <option value="phrygian">Phrygian</option>
+            <option value="locrian">Locrian</option>
+            <option value="hungarian">Hungarian</option>
+            <option value="japanese">Japanese</option>
+            <!-- Add more scales as needed -->
+        </select>
+    </div>
+    <div>
+        <label for="key">Key:</label>
+        <select id="key" onchange="displayChords()"></select>
+    </div>
+    <div>
+        <label for="playModeChord">Chord</label>
+        <input type="radio" id="playModeChord" name="playMode" value="chord" checked>
+        <label for="playModeArpeggio">Arpeggio</label>
+        <input type="radio" id="playModeArpeggio" name="playMode" value="arpeggio">
+    </div>
+    <div>
+        <button onclick="playScale()">Play Scale</button>
+    </div>
+    <div id="chords-container"></div>
+    <script type="module" src="/main.js"></script>
+</body>
+</html>
