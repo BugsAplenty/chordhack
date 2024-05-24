@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "tonal": "^6.0.1",
     "tone": "^14.9.17",
     "vite": "^5.2.11"
   }
