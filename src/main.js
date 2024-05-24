@@ -1,8 +1,6 @@
 import * as Tone from 'tone';
 import { Scale, Chord, Note, ScaleType } from 'tonal';
 
-
-
 // Audio Context
 async function startAudioContext() {
     if (Tone.context.state !== 'running') {
@@ -12,7 +10,7 @@ async function startAudioContext() {
 }
 
 // Scale and Key Selection
-function updateKeys() {
+function initializeSelectors() {
     const scaleSelect = document.getElementById('scale');
     scaleSelect.innerHTML = '';
 
@@ -26,7 +24,7 @@ function updateKeys() {
     const keySelect = document.getElementById('key');
     keySelect.innerHTML = '';
 
-    const allNotes = Scale.get('C major').notes;
+    const allNotes = Note.names();
 
     allNotes.forEach(note => {
         const option = document.createElement('option');
@@ -35,40 +33,52 @@ function updateKeys() {
         keySelect.appendChild(option);
     });
 
-    displayChords();
+    scaleSelect.addEventListener('change', updateChordsAndDisplay);
+    keySelect.addEventListener('change', updateChordsAndDisplay);
+
+    updateChordsAndDisplay(); // Initialize with default values
 }
 
-// Chord Display
-function displayChords() {
+function updateChordsAndDisplay() {
     const scaleSelect = document.getElementById('scale');
     const scale = scaleSelect.value;
     const keySelect = document.getElementById('key');
     const key = keySelect.value;
-    const chordsContainer = document.getElementById('chords-container');
-    chordsContainer.innerHTML = '';
 
-    if (!key) {
-        console.error('Key not selected');
+    if (!scale || !key) {
+        console.error('Key or scale not selected');
         return;
     }
 
-    const chords = Scale.get(`${key} ${scale}`).chords;
-    if (!chords) {
+    displayChords(scale, key);
+}
+
+// Chord Display
+function displayChords(scale, key) {
+    const chordsContainer = document.getElementById('chords-container');
+    chordsContainer.innerHTML = '';
+
+    const scaleNotes = Scale.get(`${key} ${scale}`).notes;
+    if (!scaleNotes.length) {
+        console.error(`No notes found for scale: ${scale} and key: ${key}`);
+        return;
+    }
+
+    const chordTypes = Scale.scaleChords(`${scale}`);
+    const chords = scaleNotes.flatMap(note => chordTypes.map(type => Chord.getChord(type, note).symbol)).filter(chord => chord !== '');
+
+    if (!chords.length) {
         console.error(`No chords found for scale: ${scale} and key: ${key}`);
         return;
     }
 
-    const threeFingerChords = filterChordsByFingers(chords, 3);
-    const fourFingerChords = filterChordsByFingers(chords, 4);
-    const fiveFingerChords = filterChordsByFingers(chords, 5);
+    const threeNoteChords = chords.filter(chord => Chord.get(chord).notes.length === 3);
+    const fourNoteChords = chords.filter(chord => Chord.get(chord).notes.length === 4);
+    const fiveNoteChords = chords.filter(chord => Chord.get(chord).notes.length === 5);
 
-    addChordsToContainer(chordsContainer, threeFingerChords, '3-Finger Chords');
-    addChordsToContainer(chordsContainer, fourFingerChords, '4-Finger Chords');
-    addChordsToContainer(chordsContainer, fiveFingerChords, '5-Finger Chords');
-}
-
-function filterChordsByFingers(chords, fingerCount) {
-    return chords.filter(chord => Chord.get(chord).intervals.length === fingerCount);
+    addChordsToContainer(chordsContainer, threeNoteChords, '3-Note Chords');
+    addChordsToContainer(chordsContainer, fourNoteChords, '4-Note Chords');
+    addChordsToContainer(chordsContainer, fiveNoteChords, '5-Note Chords');
 }
 
 function addChordsToContainer(container, chords, title) {
@@ -167,17 +177,11 @@ function playChordOrArpeggio(chord) {
 }
 
 // Event Listeners
-window.updateKeys = updateKeys;
+window.initializeSelectors = initializeSelectors;
 window.displayChords = displayChords;
 window.playScale = playScale;
 
 window.addEventListener('click', startAudioContext);
 window.addEventListener('keydown', startAudioContext);
 
-window.addEventListener('load', () => {
-    updateKeys();
-    const keySelect = document.getElementById('key');
-    if (keySelect) {
-        displayChords();
-    }
-});
+window.addEventListener('load', initializeSelectors);
