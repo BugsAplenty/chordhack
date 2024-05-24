@@ -1,5 +1,6 @@
-import * as Tone from 'tone';
-import { Scale, Chord, Note, ScaleType } from 'tonal';
+import * as Tone from "tone";
+import { Scale, Chord, Note, ScaleType } from "tonal";
+import GuitarChord from "./GuitarChord.js";
 
 // Audio Context
 async function startAudioContext() {
@@ -64,21 +65,36 @@ function displayChords(scale, key) {
         return;
     }
 
-    const chordTypes = Scale.scaleChords(`${scale}`);
-    const chords = scaleNotes.flatMap(note => chordTypes.map(type => Chord.getChord(type, note).symbol)).filter(chord => chord !== '');
+    const chords = {
+        '2-finger': [],
+        '3-finger': [],
+        '4-finger': [],
+        extended: []
+    };
 
-    if (!chords.length) {
-        console.error(`No chords found for scale: ${scale} and key: ${key}`);
-        return;
-    }
+    scaleNotes.forEach(root => {
+        const chordTypes = Scale.scaleChords(`${scale}`);
+        chordTypes.forEach(type => {
+            const tonalChord = Chord.getChord(type, root);
+            if (tonalChord.symbol) {
+                const guitarChord = new GuitarChord(root, tonalChord.symbol, tonalChord.intervals, tonalChord.notes);
+                const shape = guitarChord.tab;
+                if (shape) {
+                    const fingers = shape.split('').filter(f => f !== 'x').length;
+                    if (fingers === 2) chords['2-finger'].push(guitarChord);
+                    else if (fingers === 3) chords['3-finger'].push(guitarChord);
+                    else if (fingers === 4) chords['4-finger'].push(guitarChord);
+                    else if (fingers > 4) chords.extended.push(guitarChord);
+                }
+            }
+        });
+    });
 
-    const threeNoteChords = chords.filter(chord => Chord.get(chord).notes.length === 3);
-    const fourNoteChords = chords.filter(chord => Chord.get(chord).notes.length === 4);
-    const fiveNoteChords = chords.filter(chord => Chord.get(chord).notes.length === 5);
-
-    addChordsToContainer(chordsContainer, threeNoteChords, '3-Note Chords');
-    addChordsToContainer(chordsContainer, fourNoteChords, '4-Note Chords');
-    addChordsToContainer(chordsContainer, fiveNoteChords, '5-Note Chords');
+    Object.entries(chords).forEach(([fingerCount, chordGroup]) => {
+        if (chordGroup.length > 0) {
+            addChordsToContainer(chordsContainer, chordGroup, `${fingerCount.charAt(0).toUpperCase() + fingerCount.slice(1)} Chords`);
+        }
+    });
 }
 
 function addChordsToContainer(container, chords, title) {
@@ -89,14 +105,17 @@ function addChordsToContainer(container, chords, title) {
     titleElement.textContent = title;
     groupElement.appendChild(titleElement);
 
-    chords.forEach(chordName => {
-        const chord = Chord.get(chordName);
+    const chordList = document.createElement('div');
+    chordList.className = 'chord-list';
+    groupElement.appendChild(chordList);
+
+    chords.forEach(chord => {
         const chordElement = createChordElement(chord);
         chordElement.onclick = async () => {
             await startAudioContext();
             playChordOrArpeggio(chord);
         };
-        groupElement.appendChild(chordElement);
+        chordList.appendChild(chordElement);
     });
 
     container.appendChild(groupElement);
@@ -105,12 +124,8 @@ function addChordsToContainer(container, chords, title) {
 function createChordElement(chord) {
     const chordElement = document.createElement('div');
     chordElement.className = 'chord';
-    chordElement.innerHTML = `<div>${chord.symbol}</div><div class="tab">${formatTab(chord.notes)}</div>`;
+    chordElement.innerHTML = `<div>${chord.root} ${chord.type}</div><div class="tab">${chord.formatTab()}</div>`;
     return chordElement;
-}
-
-function formatTab(notes) {
-    return notes.join(' ');
 }
 
 // Scale Playback
