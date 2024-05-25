@@ -1,6 +1,6 @@
 import * as Tone from "tone";
 import { Scale, Chord, Note, ScaleType } from "tonal";
-import GuitarChord from "./GuitarChord.js";
+import GuitarChord from "./utils/GuitarChord.js";
 
 // Audio Context
 async function startAudioContext() {
@@ -13,26 +13,10 @@ async function startAudioContext() {
 // Scale and Key Selection
 function initializeSelectors() {
     const scaleSelect = document.getElementById('scale');
-    scaleSelect.innerHTML = '';
-
-    ScaleType.all().forEach(scaleType => {
-        const option = document.createElement('option');
-        option.value = scaleType.name;
-        option.textContent = scaleType.name;
-        scaleSelect.appendChild(option);
-    });
-
     const keySelect = document.getElementById('key');
-    keySelect.innerHTML = '';
 
-    const allNotes = Note.names();
-
-    allNotes.forEach(note => {
-        const option = document.createElement('option');
-        option.value = note;
-        option.textContent = note;
-        keySelect.appendChild(option);
-    });
+    populateScaleOptions(scaleSelect);
+    populateKeyOptions(keySelect);
 
     scaleSelect.addEventListener('change', updateChordsAndDisplay);
     keySelect.addEventListener('change', updateChordsAndDisplay);
@@ -40,10 +24,30 @@ function initializeSelectors() {
     updateChordsAndDisplay(); // Initialize with default values
 }
 
+function populateScaleOptions(scaleSelect) {
+    scaleSelect.innerHTML = '';
+    ScaleType.all().forEach(scaleType => {
+        const option = document.createElement('option');
+        option.value = scaleType.name;
+        option.textContent = scaleType.name;
+        scaleSelect.appendChild(option);
+    });
+}
+
+function populateKeyOptions(keySelect) {
+    keySelect.innerHTML = '';
+    Note.names().forEach(note => {
+        const option = document.createElement('option');
+        option.value = note;
+        option.textContent = note;
+        keySelect.appendChild(option);
+    });
+}
+
 function updateChordsAndDisplay() {
     const scaleSelect = document.getElementById('scale');
-    const scale = scaleSelect.value;
     const keySelect = document.getElementById('key');
+    const scale = scaleSelect.value;
     const key = keySelect.value;
 
     if (!scale || !key) {
@@ -65,6 +69,16 @@ function displayChords(scale, key) {
         return;
     }
 
+    const chords = categorizeChords(scaleNotes, scale);
+
+    Object.entries(chords).forEach(([fingerCount, chordGroup]) => {
+        if (chordGroup.length > 0) {
+            addChordsToContainer(chordsContainer, chordGroup, `${capitalize(fingerCount)} Chords`);
+        }
+    });
+}
+
+function categorizeChords(scaleNotes, scale) {
     const chords = {
         '2-finger': [],
         '3-finger': [],
@@ -90,11 +104,7 @@ function displayChords(scale, key) {
         });
     });
 
-    Object.entries(chords).forEach(([fingerCount, chordGroup]) => {
-        if (chordGroup.length > 0) {
-            addChordsToContainer(chordsContainer, chordGroup, `${fingerCount.charAt(0).toUpperCase() + fingerCount.slice(1)} Chords`);
-        }
-    });
+    return chords;
 }
 
 function addChordsToContainer(container, chords, title) {
@@ -131,8 +141,8 @@ function createChordElement(chord) {
 // Scale Playback
 async function playScale() {
     const scaleSelect = document.getElementById('scale');
-    const scale = scaleSelect.value;
     const keySelect = document.getElementById('key');
+    const scale = scaleSelect.value;
     const key = keySelect.value;
     await startAudioContext();
 
@@ -140,6 +150,18 @@ async function playScale() {
     const now = Tone.now();
 
     const scaleNotes = Scale.get(`${key} ${scale}`).notes;
+    const scaleNotesWithOctaves = getScaleNotesWithOctaves(scaleNotes);
+
+    const palindromicNotes = [...scaleNotesWithOctaves, ...scaleNotesWithOctaves.slice(0, -1).reverse()];
+
+    console.log(`Playing scale: ${palindromicNotes.join(', ')}`);
+
+    palindromicNotes.forEach((note, index) => {
+        synth.triggerAttackRelease(note, "8n", now + index * 0.2);
+    });
+}
+
+function getScaleNotesWithOctaves(scaleNotes) {
     const scaleNotesWithOctaves = [];
     let currentOctave = 4;
 
@@ -156,13 +178,7 @@ async function playScale() {
         scaleNotesWithOctaves.push(`${note}${currentOctave}`);
     });
 
-    const palindromicNotes = [...scaleNotesWithOctaves, ...scaleNotesWithOctaves.slice(0, -1).reverse()];
-
-    console.log(`Playing scale: ${palindromicNotes.join(', ')}`);
-
-    palindromicNotes.forEach((note, index) => {
-        synth.triggerAttackRelease(note, "8n", now + index * 0.2);
-    });
+    return scaleNotesWithOctaves;
 }
 
 // Chord/Arpeggio Playback
@@ -189,6 +205,11 @@ function playChordOrArpeggio(chord) {
             synth.triggerAttackRelease(note, "8n", now + index * 0.25);
         });
     }
+}
+
+// Utility Functions
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 // Event Listeners

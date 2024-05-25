@@ -1,10 +1,13 @@
+// src/utils/GuitarChord.js
 import { Chord, Note } from 'tonal';
 import GuitarNeck from './GuitarNeck';
 
 class GuitarChord {
-    constructor(name) {
-        this.name = name;
-        this.notes = Chord.get(name).notes;
+    constructor(root, type, intervals, notes) {
+        this.root = root;
+        this.type = type;
+        this.intervals = intervals;
+        this.notes = notes;
         this.tab = this.generateChordTab();
     }
 
@@ -35,7 +38,7 @@ class GuitarChord {
                 const maxFret = Math.max(...frets);
                 const minFret = Math.min(...frets);
                 const fretSpan = maxFret - minFret;
-                if (fretSpan < minFretSpan) {
+                if (fretSpan <= 5 && fretSpan < minFretSpan) { // Ensure fret span is within 5
                     bestShape = shape;
                     minFretSpan = fretSpan;
                     if (minFretSpan === 0) break; // Early exit if minimal span is found
@@ -57,6 +60,10 @@ class GuitarChord {
         }
 
         return bestShape ? bestShape.map(fret => (fret === -1 ? 'x' : fret)).join('') : null;
+    }
+
+    formatTab() {
+        return this.tab.split('').map(fret => (fret === 'x' ? 'x' : fret)).join('');
     }
 }
 
