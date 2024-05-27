@@ -7,19 +7,23 @@ describe('GuitarChord', () => {
 
     chords.forEach(chordName => {
         test(`should generate correct tab shape for ${chordName} chord`, () => {
-            const chord = new GuitarChord(chordName);
-            const expectedNotes = Chord.get(chordName).notes;
+            const chordData = Chord.get(chordName);
+            const { tonic: root, type, intervals, notes } = chordData;
+
+            const guitarChord = new GuitarChord(root, type, intervals, notes);
+            const expectedNotes = new Set(notes);
+
             console.log(`Chord: ${chordName}`);
-            console.log(`Chord Notes: ${expectedNotes.join(',')}`);
-            console.log(`Chord Tab: ${chord.tab}`);
+            console.log(`Chord Notes: ${Array.from(expectedNotes).join(',')}`);
+            console.log(`Chord Tab: ${guitarChord.tab}`);
 
-            const shapeNotes = new Set(chord.notes);
+            const shapeNotes = new Set(guitarChord.guitarNeck.getNotesAtFrets(guitarChord.tab.split('-').map(fret => fret === 'x' ? -1 : parseInt(fret))));
 
-            console.log(`Unique Notes: ${expectedNotes.join(',')}`);
+            console.log(`Unique Notes: ${Array.from(expectedNotes).join(',')}`);
             console.log(`Shape Notes: ${Array.from(shapeNotes).join(',')}`);
 
-            expect(chord.tab).not.toBeNull();
-            expect(shapeNotes.size).toBe(expectedNotes.length);
+            expect(guitarChord.tab).not.toBeNull();
+            expect(shapeNotes.size).toBe(expectedNotes.size);
         });
     });
 });

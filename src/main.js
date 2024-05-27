@@ -1,5 +1,5 @@
 import * as Tone from "tone";
-import { Scale, Chord, Note, ScaleType } from "tonal";
+import { Scale, Chord, Note, ScaleType, Key } from "tonal";
 import GuitarChord from "./utils/GuitarChord.js";
 
 // Audio Context
@@ -13,99 +13,106 @@ async function startAudioContext() {
 // Scale and Key Selection
 function initializeSelectors() {
     const scaleSelect = document.getElementById('scale');
-    const keySelect = document.getElementById('key');
+    const tonicSelect = document.getElementById('tonic');
 
     populateScaleOptions(scaleSelect);
-    populateKeyOptions(keySelect);
+    populateTonicOptions(tonicSelect);
 
-    scaleSelect.addEventListener('change', updateChordsAndDisplay);
-    keySelect.addEventListener('change', updateChordsAndDisplay);
+    scaleSelect.addEventListener('change', handleScaleChange);
+    tonicSelect.addEventListener('change', handleTonicChange);
 
     updateChordsAndDisplay(); // Initialize with default values
 }
 
 function populateScaleOptions(scaleSelect) {
     scaleSelect.innerHTML = '';
-    ScaleType.all().forEach(scaleType => {
+    const scaleTypes = ScaleType.all();
+    for (let i = 0; i < scaleTypes.length; i++) {
+        const scaleType = scaleTypes[i];
         const option = document.createElement('option');
         option.value = scaleType.name;
         option.textContent = scaleType.name;
         scaleSelect.appendChild(option);
-    });
+    }
 }
 
-function populateKeyOptions(keySelect) {
-    keySelect.innerHTML = '';
-    Note.names().forEach(note => {
+function populateTonicOptions(tonicSelect) {
+    tonicSelect.innerHTML = '';
+    const noteNames = Note.names();
+    for (let i = 0; i < noteNames.length; i++) {
+        const note = noteNames[i];
         const option = document.createElement('option');
         option.value = note;
         option.textContent = note;
-        keySelect.appendChild(option);
-    });
+        tonicSelect.appendChild(option);
+    }
+}
+
+function handleScaleChange() {
+    updateChordsAndDisplay();
+}
+
+function handleTonicChange() {
+    updateChordsAndDisplay();
 }
 
 function updateChordsAndDisplay() {
     const scaleSelect = document.getElementById('scale');
-    const keySelect = document.getElementById('key');
+    const tonicSelect = document.getElementById('tonic');
     const scale = scaleSelect.value;
-    const key = keySelect.value;
+    const tonic = tonicSelect.value;
 
-    if (!scale || !key) {
+    if (!scale || !tonic) {
         console.error('Key or scale not selected');
         return;
     }
 
-    displayChords(scale, key);
+    displayChords(scale, tonic);
 }
 
 // Chord Display
-function displayChords(scale, key) {
+function displayChords(scale, tonic) {
     const chordsContainer = document.getElementById('chords-container');
     chordsContainer.innerHTML = '';
 
-    const scaleNotes = Scale.get(`${key} ${scale}`).notes;
+    const scaleNotes = Scale.get(`${tonic} ${scale}`).notes;
     if (!scaleNotes.length) {
-        console.error(`No notes found for scale: ${scale} and key: ${key}`);
+        console.error(`No notes found for scale: ${scale} and tonic: ${tonic}`);
         return;
     }
 
-    const chords = categorizeChords(scaleNotes, scale);
+    const chords = generateChordsForScale(scaleNotes, scale, tonic);
 
-    Object.entries(chords).forEach(([fingerCount, chordGroup]) => {
+    Object.entries(chords).forEach(([chordType, chordGroup]) => {
         if (chordGroup.length > 0) {
-            addChordsToContainer(chordsContainer, chordGroup, `${capitalize(fingerCount)} Chords`);
+            addChordsToContainer(chordsContainer, chordGroup, `${capitalize(chordType)}`);
         }
     });
 }
 
-function categorizeChords(scaleNotes, scale) {
-    const chords = {
-        '2-finger': [],
-        '3-finger': [],
-        '4-finger': [],
-        extended: []
-    };
+function getIntervalsFromScale(array, startIndex, count) {
+    let result = [];
+    for (let i = 0; i < count * 2; i += 2) { // Increment by 2 to "skip" every other element
+        // Calculate the index considering wrapping
+        let index = (startIndex + i) % array.length;
+        result.push(array[index]);
+    }
+    return result;
+}
 
-    scaleNotes.forEach(root => {
-        const chordTypes = Scale.scaleChords(`${scale}`);
-        chordTypes.forEach(type => {
-            const tonalChord = Chord.getChord(type, root);
-            if (tonalChord.symbol) {
-                const guitarChord = new GuitarChord(root, tonalChord.symbol, tonalChord.intervals, tonalChord.notes);
-                const shape = guitarChord.tab;
-                if (shape) {
-                    const fingers = shape.split('').filter(f => f !== 'x').length;
-                    if (fingers === 2) chords['2-finger'].push(guitarChord);
-                    else if (fingers === 3) chords['3-finger'].push(guitarChord);
-                    else if (fingers === 4) chords['4-finger'].push(guitarChord);
-                    else if (fingers > 4) chords.extended.push(guitarChord);
-                }
-            }
-        });
+function generateChordsForScale(scaleNotes) {
+    let chords = { triads: [], seventhChords: [], ninthChords: [] };
+    scaleNotes.forEach((root, index) => {
+        // For triads
+        chords.triads.push(new GuitarChord(root, getIntervalsFromScale(scaleNotes, index, 3)));
+        // For seventh chords
+        chords.seventhChords.push(new GuitarChord(root, getIntervalsFromScale(scaleNotes, 4)));
+        // For ninth chords
+        chords.ninthChords.push(new GuitarChord(root, getIntervalsFromScale(scaleNotes, index, 5)));
     });
-
     return chords;
 }
+
 
 function addChordsToContainer(container, chords, title) {
     const groupElement = document.createElement('div');
@@ -121,10 +128,7 @@ function addChordsToContainer(container, chords, title) {
 
     chords.forEach(chord => {
         const chordElement = createChordElement(chord);
-        chordElement.onclick = async () => {
-            await startAudioContext();
-            playChordOrArpeggio(chord);
-        };
+        chordElement.addEventListener('click', handleChordClick);
         chordList.appendChild(chordElement);
     });
 
@@ -134,22 +138,31 @@ function addChordsToContainer(container, chords, title) {
 function createChordElement(chord) {
     const chordElement = document.createElement('div');
     chordElement.className = 'chord';
+    chordElement.dataset.chord = JSON.stringify(chord);
     chordElement.innerHTML = `<div>${chord.root} ${chord.type}</div><div class="tab">${chord.formatTab()}</div>`;
     return chordElement;
+}
+
+async function handleChordClick(event) {
+    const chordElement = event.target.closest('.chord');
+    const chordData = JSON.parse(chordElement.dataset.chord);
+    const guitarChord = new GuitarChord(chordData.root, chordData.type, chordData.intervals, chordData.notes);
+    await startAudioContext();
+    playChordOrArpeggio(guitarChord);
 }
 
 // Scale Playback
 async function playScale() {
     const scaleSelect = document.getElementById('scale');
-    const keySelect = document.getElementById('key');
+    const tonicSelect = document.getElementById('tonic');
     const scale = scaleSelect.value;
-    const key = keySelect.value;
+    const tonic = tonicSelect.value;
     await startAudioContext();
 
     const synth = new Tone.PolySynth(Tone.Synth).toDestination();
     const now = Tone.now();
 
-    const scaleNotes = Scale.get(`${key} ${scale}`).notes;
+    const scaleNotes = Scale.get(`${tonic} ${scale}`).notes;
     const scaleNotesWithOctaves = getScaleNotesWithOctaves(scaleNotes);
 
     const palindromicNotes = [...scaleNotesWithOctaves, ...scaleNotesWithOctaves.slice(0, -1).reverse()];
@@ -182,10 +195,10 @@ function getScaleNotesWithOctaves(scaleNotes) {
 }
 
 // Chord/Arpeggio Playback
-function getOctave(note, key) {
+function getOctave(note, tonic) {
     const noteIndex = Note.names().indexOf(note);
-    const keyIndex = Note.names().indexOf(key);
-    const octaveOffset = Math.floor((noteIndex - keyIndex) / 12);
+    const tonicIndex = Note.names().indexOf(tonic);
+    const octaveOffset = Math.floor((noteIndex - tonicIndex) / 12);
     return 4 + octaveOffset;
 }
 
@@ -193,15 +206,26 @@ function playChordOrArpeggio(chord) {
     const playMode = document.querySelector('input[name="playMode"]:checked').value;
     const synth = new Tone.PolySynth(Tone.Synth).toDestination();
     const now = Tone.now();
-    const keySelect = document.getElementById('key');
-    const key = keySelect.value;
+    const tonicSelect = document.getElementById('tonic');
+    const tonic = tonicSelect.value;
 
-    const chordNotes = chord.notes.map(note => `${note}${getOctave(note, key)}`);
+    const chordNotes = chord.type.map(note => `${note}${getOctave(note, tonic)}`);
 
     if (playMode === 'chord') {
         synth.triggerAttackRelease(chordNotes, "8n", now);
     } else {
-        chordNotes.forEach((note, index) => {
+        // Play arpeggio in the order of low string to high string
+        const tab = chord.tab.split('-');
+        const stringOrder = [5, 4, 3, 2, 1, 0]; // Order of strings from low E to high E
+        const arpeggioNotes = stringOrder.map(stringIndex => {
+            const fret = tab[stringIndex];
+            if (fret !== 'x' && fret !== '0') {
+                return `${chord.notes[stringIndex]}${getOctave(chord.notes[stringIndex], tonic)}`;
+            }
+            return null;
+        }).filter(note => note !== null);
+
+        arpeggioNotes.forEach((note, index) => {
             synth.triggerAttackRelease(note, "8n", now + index * 0.25);
         });
     }
@@ -218,6 +242,6 @@ window.displayChords = displayChords;
 window.playScale = playScale;
 
 window.addEventListener('click', startAudioContext);
-window.addEventListener('keydown', startAudioContext);
+window.addEventListener('tonicdown', startAudioContext);
 
 window.addEventListener('load', initializeSelectors);
