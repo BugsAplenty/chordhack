@@ -17,6 +17,14 @@
         <select id="tonic" onchange="displayChords()"></select>
     </div>
     <div>
+        <label for="tuning">Tuning:</label>
+        <select id="tuning" onchange="displayChords()">
+            <option value="standard">Standard</option>
+            <option value="dropD">Drop D</option>
+            <!-- Add more tunings as needed -->
+        </select>
+    </div>
+    <div>
         <label for="playModeChord">Chord</label>
         <input type="radio" id="playModeChord" name="playMode" value="chord" checked>
         <label for="playModeArpeggio">Arpeggio</label>
