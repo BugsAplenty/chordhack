@@ -1,7 +1,7 @@
 import { Chord } from '@tonaljs/chord';
 import { ChordType, ChordQuality } from '@tonaljs/chord-type';
 import { Note, Interval } from 'tonal';
-import minimizeDiagonalSpan from './minimizeDiagonalSpan.js'
+import minimizeDiagonalSpan from './minimizeDiagonalSpan.js';
 
 class GuitarChord implements ChordType {
     name: string;
@@ -49,7 +49,6 @@ class GuitarChord implements ChordType {
             }
         }
     }
-    
 
     generateTabsAndNotes(): void {
         const { bestDiagonal } = minimizeDiagonalSpan(this.semitoneDistanceMatrix);
@@ -62,10 +61,9 @@ class GuitarChord implements ChordType {
             this.stringNotes[string] = Note.transpose(string, Interval.fromSemitones(fret));
         }
     }
-    
 
     isWithinFretSpan(fret1: number, fret2: number): boolean {
-        return Math.abs(fret1 - fret2) <= 4;
+        return Math.abs(fret1 - fret2) <= 3;
     }
 
     isCompleteChord(): boolean {
@@ -86,7 +84,7 @@ class GuitarChord implements ChordType {
         const filteredFretValues = fretValues.filter(value => !isNaN(value));
         const minFret = Math.min(...filteredFretValues);
         const maxFret = Math.max(...filteredFretValues);
-        return Math.abs(minFret - maxFret) <= 4;
+        return Math.abs(minFret - maxFret) <= 3;
     }
 
     shapeHasStringGaps(fretValues: number[]): boolean {

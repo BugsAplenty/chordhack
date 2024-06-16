@@ -2,34 +2,37 @@ function minimizeDiagonalSpan(matrix) {
     const m = matrix.length;
     const n = matrix[0].length;
 
-    // Select the first n rows as the subset
-    const subsetMatrix = matrix.slice(0, n);
+    // Helper function to generate all permutations of an array
+    function generatePermutations(arr) {
+        if (arr.length === 0) return [[]];
+        const firstElem = arr[0];
+        const rest = arr.slice(1);
+        const permsWithoutFirst = generatePermutations(rest);
+        const allPerms = [];
+        permsWithoutFirst.forEach(perm => {
+            for (let i = 0; i <= perm.length; i++) {
+                const permWithFirst = [...perm.slice(0, i), firstElem, ...perm.slice(i)];
+                allPerms.push(permWithFirst);
+            }
+        });
+        return allPerms;
+    }
 
-    // Initialize the best diagonal and its span
+    const columnPermutations = generatePermutations([...Array(n).keys()]);
     let bestDiagonal = [];
     let minSpan = Infinity;
 
-    // Greedy approach to find the minimal span
-    const usedColumns = new Set();
-    for (let i = 0; i < n; i++) {
-        let bestValue = Infinity;
-        let bestColumn = -1;
-        for (let j = 0; j < n; j++) {
-            if (!usedColumns.has(j)) {
-                const value = subsetMatrix[i][j];
-                if (value < bestValue) {
-                    bestValue = value;
-                    bestColumn = j;
-                }
-            }
+    // Try all column permutations to find the one with the minimal span
+    for (const perm of columnPermutations) {
+        const diagonal = [];
+        for (let i = 0; i < n; i++) {
+            diagonal.push(matrix[i][perm[i]]);
         }
-        usedColumns.add(bestColumn);
-        bestDiagonal.push(bestValue);
-    }
-
-    const span = Math.max(...bestDiagonal) - Math.min(...bestDiagonal);
-    if (span < minSpan) {
-        minSpan = span;
+        const span = Math.max(...diagonal) - Math.min(...diagonal);
+        if (span <= 3 && span < minSpan) {
+            minSpan = span;
+            bestDiagonal = diagonal;
+        }
     }
 
     return { bestDiagonal, minSpan };
