@@ -77,7 +77,7 @@ function updateChordsAndDisplay() {
     const tuningSelect = document.getElementById('tuning');
     const scale = scaleSelect.value;
     const tonic = tonicSelect.value;
-    const tuning = tuningSelect.value;
+    const tuning = tunings[tuningSelect.value];
     if (!scale || !tonic) {
         console.error('Key or scale not selected');
         return;
@@ -198,7 +198,7 @@ function handleChordClick(event) {
                 empty: chordData.empty,
                 setNum: chordData.setNum,
                 chroma: chordData.chroma,
-                normalized: chordData.normalized
+                normalized: chordData.normalized,
             },
             chordData.tuning
         );
