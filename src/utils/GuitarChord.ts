@@ -10,8 +10,9 @@ class GuitarChord implements ChordType {
     tonic: string | null;
     type: string;
     tuning: string[];
-    tab: { [GuitarString: string]: string };
-    stringNotes: { [GuitarString: string]: string };
+    tabs: { [GuitarString: string]: string[] } [];
+    stringNotes: { [GuitarString: string]: string[] } [];
+    tabTexts: string [];
     quality: ChordQuality;
     aliases: string[];
     empty: boolean;
@@ -33,9 +34,11 @@ class GuitarChord implements ChordType {
         this.chroma = chord.chroma;
         this.normalized = chord.normalized;
         this.tuning = tuning;
-        this.tab = {};
-        this.stringNotes = {};
+        this.tabTexts = [];
+        this.tabs = [];
+        this.stringNotes = [];
         this.name = chord.name;
+        this.semitoneDistanceMatrix = [];
         this.generateSemitoneDistanceMatrix();
         this.generateTabsAndNotes();
     }
@@ -51,60 +54,24 @@ class GuitarChord implements ChordType {
     }
 
     generateTabsAndNotes(): void {
-        const { bestDiagonal } = minimizeDiagonalSpan(this.semitoneDistanceMatrix);
-        this.tab = {};
-        this.stringNotes = {};
-        for (let i = 0; i < bestDiagonal.length; i++) {
-            const string = this.tuning[i];
-            const fret = bestDiagonal[i];
-            this.tab[string] = fret.toString();
-            this.stringNotes[string] = Note.transpose(string, Interval.fromSemitones(fret));
-        }
-    }
-
-    isWithinFretSpan(fret1: number, fret2: number): boolean {
-        return Math.abs(fret1 - fret2) <= 3;
-    }
-
-    isCompleteChord(): boolean {
-        const playedNotes = Object.values(this.stringNotes).map(note => Note.pitchClass(note));
-        const chordNotesSet = new Set(this.notes);
-        const playedNotesSet = new Set(playedNotes);
-        return chordNotesSet.size === playedNotesSet.size && [...chordNotesSet].every(note => playedNotesSet.has(note));
-    }
-
-    isPlayableChord(): boolean {
-        const fretValues = this.tuning.map(guitarString => {
-            return Number(this.tab[guitarString]);
-        });
-        return this.allFretsInSpan(fretValues) && !this.shapeHasStringGaps(fretValues);
-    }
-
-    allFretsInSpan(fretValues: number[]): boolean {
-        const filteredFretValues = fretValues.filter(value => !isNaN(value));
-        const minFret = Math.min(...filteredFretValues);
-        const maxFret = Math.max(...filteredFretValues);
-        return Math.abs(minFret - maxFret) <= 3;
-    }
-
-    shapeHasStringGaps(fretValues: number[]): boolean {
-        let hasNaNsBetweenNumbers = false;
-        let lastNumberIndex = -1;
-
-        for (let i = 0; i < fretValues.length; i++) {
-            if (!isNaN(fretValues[i])) {
-                if (lastNumberIndex !== -1 && i - lastNumberIndex > 1) {
-                    hasNaNsBetweenNumbers = true;
-                    break;
-                }
-                lastNumberIndex = i;
+        const validDiagonals = minimizeDiagonalSpan(this.semitoneDistanceMatrix);
+        validDiagonals.forEach(({ diagonal, rowIndices }, shapeIndex) => {
+            let tab = {};
+            let stringNote = {};
+            for (let i = 0; i < diagonal.length; i++) {
+                const guitarString = this.tuning[rowIndices[i]];
+                const fret = diagonal[i];
+                tab[guitarString] = fret;
+                stringNote[guitarString] = Note.transpose(guitarString, Interval.fromSemitones(fret));
+                
             }
-        }
-        return hasNaNsBetweenNumbers;
+            this.tabs.push(tab);
+            this.stringNotes.push(stringNote);
+            this.tabTexts.push(this.tab2Text(tab));
+        });
     }
-
-    isValidChord(): boolean {
-        return this.isCompleteChord() && this.isPlayableChord();
+    tab2Text(tab: { [GuitarString: string]: string }): string {
+        return this.tuning.map(string => `${string} - ${tab.hasOwnProperty(string) ? tab[string] : 'x'}`).join('\n');
     }
 }
 

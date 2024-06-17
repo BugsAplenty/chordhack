@@ -18,24 +18,38 @@ function minimizeDiagonalSpan(matrix) {
         return allPerms;
     }
 
-    const columnPermutations = generatePermutations([...Array(n).keys()]);
-    let bestDiagonal = [];
-    let minSpan = Infinity;
-
-    // Try all column permutations to find the one with the minimal span
-    for (const perm of columnPermutations) {
-        const diagonal = [];
-        for (let i = 0; i < n; i++) {
-            diagonal.push(matrix[i][perm[i]]);
+    // Helper function to get all possible nxn submatrices with their original row indices
+    function getSubmatrices(matrix) {
+        const submatrices = [];
+        for (let i = 0; i <= m - n; i++) {
+            const submatrix = matrix.slice(i, i + n);
+            const rowIndices = Array.from({ length: n }, (_, k) => i + k);
+            submatrices.push({ submatrix, rowIndices });
         }
-        const span = Math.max(...diagonal) - Math.min(...diagonal);
-        if (span <= 3 && span < minSpan) {
-            minSpan = span;
-            bestDiagonal = diagonal;
+        return submatrices;
+    }
+
+    const columnPermutations = generatePermutations([...Array(n).keys()]);
+    const validDiagonals = [];
+
+    // Get all possible nxn submatrices
+    const submatrices = getSubmatrices(matrix);
+
+    // Try all submatrices and column permutations to find all that comply with the 3-fret rule
+    for (const { submatrix, rowIndices } of submatrices) {
+        for (const perm of columnPermutations) {
+            const diagonal = [];
+            for (let i = 0; i < n; i++) {
+                diagonal.push(submatrix[i][perm[i]]);
+            }
+            const span = Math.max(...diagonal) - Math.min(...diagonal);
+            if (span <= 3) {
+                validDiagonals.push({ diagonal, rowIndices });
+            }
         }
     }
 
-    return { bestDiagonal, minSpan };
+    return validDiagonals;
 }
 
 export default minimizeDiagonalSpan;

@@ -35,12 +35,49 @@ button {
     border: 1px solid #ccc;
     border-radius: 8px;
     margin: 10px;
-    padding: 10px;
-    width: 100px;
+    padding: 20px;
+    width: 400px; /* Increased width */
+    height: auto; /* Adjust height automatically */
     text-align: center;
+    box-sizing: border-box;
 }
 
-.tab {
+.tab-buttons {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping */
+    justify-content: space-between; /* Distribute space evenly */
     margin-top: 10px;
+}
+
+.tab-button {
+    margin: 5px;
     font-family: monospace;
+    padding: 10px; /* Increased padding for better appearance */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #e0e0e0;
+    cursor: pointer;
+    box-sizing: border-box; /* Ensure padding and border are included in the width */
+    text-align: center; /* Center the text */
+    height: 200px; /* Fixed height for consistency */
+    width: 80px;
+}
+
+.tab-button:hover {
+    background-color: #d0d0d0;
+}
+
+.tab-text {
+    white-space: pre-wrap; /* Preserve whitespace and line breaks */
+    text-align: left;
+    font-family: monospace;
+    margin-top: 10px;
+    width: 100%; /* Make tab text take full width */
+    height: 300px; /* Make tab text longer */
+    overflow-y: auto; /* Add vertical scroll if content overflows */
+    box-sizing: border-box; /* Include padding and border in the element's width and height */
+    background-color: #f9f9f9; /* Light background for better readability */
+    padding: 10px; /* Add padding for better appearance */
+    border: 1px solid #ccc; /* Add border for better appearance */
+    border-radius: 4px; /* Add border radius for better appearance */
 }
