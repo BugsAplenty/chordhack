@@ -1,45 +1,32 @@
-name: Deploy to GitHub Pages
+name: Build and Deploy to GitHub Pages
 
 on:
   push:
     branches:
-      - master  # Change this to your default branch if it's not 'master'
+      - master
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-
+    permissions:
+        contents: write
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '21' # Use the Node.js version that matches your development environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '21'
 
-    - name: Install Dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: List Root Directory
-      run: ls -alh
+      - name: Build project
+        run: npm run build
 
-    - name: Build Project and Show Output
-      env:
-        BASE_URL: '/chordHack/'
-      run: npm run build | tee build-output.log
-      working-directory: ./
-    
-    - name: List Output Directory
-      run: pwd && ls -alh
-
-    - name: List Dist Directory
-      run: ls -alh dist/
-
-    - name: Deploy to GitHub Pages
-      uses: JamesIves/github-pages-deploy-action@4.1.4
-      with:
-        branch: gh-pages
-        folder: dist
-        token: ${{ secrets.GITHUB_TOKEN }}
-        clean: true
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
