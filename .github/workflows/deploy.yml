@@ -9,7 +9,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-        contents: write
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,6 +25,9 @@ jobs:
 
       - name: Build project
         run: npm run build
+
+      - name: List build directory contents
+        run: ls -la ./build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
