@@ -26,7 +26,7 @@ jobs:
 
     - name: Build Project and Show Output
       env:
-        BASE_URL: '/nBody/'
+        BASE_URL: '/chordHack/'
       run: npm run build | tee build-output.log
       working-directory: ./
     
